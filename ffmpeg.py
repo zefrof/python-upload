@@ -3,7 +3,7 @@ import subprocess
 import datetime
 
 #Download clips from Reddit
-subprocess.run('youtube-dl $(curl -s -H "User-agent: \'your bot 0.1\'" https://www.reddit.com/r/IdiotsInCars/hot.json?limit=25 | jq \'.\' | grep url_overridden_by_dest | grep -Eoh "https:\/\/v\.redd\.it\/\w{13}")', shell=True)
+subprocess.run('youtube-dl $(curl -s -H "User-agent: \'your bot 0.1\'" https://www.reddit.com/r/IdiotsInCars/hot.json?limit=20 | jq \'.\' | grep url_overridden_by_dest | grep -Eoh "https:\/\/v\.redd\.it\/\w{13}")', shell=True)
 
 video_files = glob.glob("/home/zefrof/Documents/youtube/*.mp4")
 
@@ -48,7 +48,7 @@ subprocess.run(command, shell=True)
 #https://github.com/tokland/youtube-upload
 now = datetime.datetime.now()
 now = now.strftime("%Y-%m-%d")
-print('youtube-upload --title="Best Of Idiots In Cars ' + now + '" --description="The best videos of Idiots In Cars from ' + now + '. Like, comment, and subscribe! New videos every day!\nWe take the best clips of idiots in cars, and combine them into the ultimate idiots in cars compilation!" --category="Autos & Vehicles" --tags="idiots in cars, best of idiots in cars, idiots in cars highlights, idiots in cars top, idiots in cars reddit, idiots in cars compilation, idiots in cars reaction, idiots in cars police, idiots in cars clips, idiots in cars driving fails, epic car fails" --default-language="en" --default-audio-language="en" --client-secrets="/home/zefrof/Documents/youtube/client_secrets.json" --credentials-file="/home/zefrof/Documents/youtube/my_credentials.json" /home/zefrof/Documents/youtube/output.mkv')
+print('youtube-upload --title="Best Of Idiots In Cars ' + now + '" --description="The best videos of Idiots In Cars from ' + now + '. Like, comment, and subscribe! New video every day!\nWe take the best clips of idiots in cars, and combine them into the ultimate idiots in cars compilation! Witness epic car crashes, police cars in action, and some of the top car driving fails from Reddit." --category="Autos & Vehicles" --tags="idiots in cars, best of idiots in cars, idiots in cars highlights, idiots in cars top, idiots in cars reddit, idiots in cars compilation, idiots in cars reaction, idiots in cars police, idiots in cars clips, idiots in cars driving fails, epic car fails, idiots in car, idiot in car, epic car crashes" --default-language="en" --default-audio-language="en" --client-secrets="/home/zefrof/Documents/youtube/client_secrets.json" --credentials-file="/home/zefrof/Documents/youtube/my_credentials.json" /home/zefrof/Documents/youtube/output.mkv')
 #subprocess.run('youtube-upload --title="Best Of Idiots In Cars ' + now + '" --description="The best videos of Idiots In Cars from ' + now + '" --category="Autos & Vehicles" --tags="idiots in cars, best of idiots in cars, idiots in cars highlights, idiots in cars top, idiots in cars reddit, idiots in cars compilation, idiots in cars reaction, idiots in cars police, idiots in cars clips, idiots in cars driving fails" --default-language="en" --default-audio-language="en" --client-secrets="/home/zefrof/Documents/youtube/client_secrets.json" --credentials-file="/home/zefrof/Documents/youtube/my_credentials.json" /home/zefrof/Documents/youtube/output.mkv', shell=True)
 
 #Delete un-needed files
