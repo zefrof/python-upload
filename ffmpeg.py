@@ -4,7 +4,20 @@ import requests
 from datetime import datetime
 from PIL import Image, ImageFont, ImageDraw 
 
+def loadLinksFromDisk():
+	with open('urls.txt') as url_file:
+		return url_file.read().splitlines()
+
+def saveLinksToDisk(linkArray):
+	with open("urls.txt", "w") as url_file:
+		for line in linkArray:
+	  	  url_file.write(line + "\n") 
+
+#Download clips from Reddit
 def downloadClips():
+	#If youtube-dl ever goes down https://github.com/yt-dlp/yt-dlp#format-selection
+	prevUsedLinks = loadLinksFromDisk()
+	usedLinks = []
 	headers = {
 		'User-Agent': 'car bot'
 	}
@@ -14,12 +27,20 @@ def downloadClips():
 	command = 'youtube-dl '
 	for url in reddit['data']['children']:
 		tmp = url['data']['url_overridden_by_dest']
-		if 'v.redd.it' in tmp:
+		if tmp in prevUsedLinks:
+			print("==> SKIPPED!")
+			continue
+		elif 'v.redd.it' in tmp:
 			command += tmp + " "
+			usedLinks.append(tmp)
 		elif 'streamable' in tmp:
 			command += tmp + " "
+			usedLinks.append(tmp)
 		elif 'youtu.be' in tmp:
 			command += tmp + " "
+			usedLinks.append(tmp)
+	
+	saveLinksToDisk(usedLinks)
 
 	subprocess.run(command, shell=True)
 
@@ -47,6 +68,7 @@ def fixRes():
 		subprocess.run('ffmpeg  -i ' + f + ' -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1" -c:v mpeg4 -q:v 4 -c:a libmp3lame -q:a 4 fixed/' + str(index)  + ".mp4", shell=True)
 		index += 1
 
+#Combine all clips into one video
 def combineClips():
 	#https://stackoverflow.com/questions/7333232/how-to-concatenate-two-mp4-files-using-ffmpeg#11175851
 	video_files = glob.glob("fixed/*.mp4")
@@ -64,6 +86,7 @@ def combineClips():
 	command += 'concat=n=' + str(len(video_files)) + ':v=1:a=1 [v] [a]" -map "[v]" -map "[a]" output.mkv'
 	subprocess.run(command, shell=True)
 
+#Generate a thumbnail from the video
 def thumbnailGen(epNum):
 	video_input_path = 'output.mkv'
 	img_output_path = 'thumbnail.jpg'
@@ -94,42 +117,39 @@ def thumbnailGen(epNum):
 	image_edit.text((x, y), text, font = font, fill = fillcolor)
 	thumbnail.save("thumbnail.jpg")
 
+#Upload video
+def uploadVideo(epNum, str_now):
+	#https://github.com/tokland/youtube-upload
+
+	subprocess.run('youtube-upload --title="Best Of Idiots In Cars ' + epNum + '" --description="The best videos of Idiots In Cars from ' + str_now + '. Like, comment, and subscribe! New videos Monday through Friday!\nWe take the best clips of idiots in cars, and combine them into the ultimate idiots in cars compilation! Witness epic car crashes, police cars in action, the best dash cam footage, and some of the top car driving fails on the internet." --category="Autos & Vehicles" --tags="idiots in cars, best of idiots in cars, idiots in cars highlights, dashcam fails, idiots in cars reddit, dash cam accidents, total idiots driving in russia, idiots in cars police, idiots in cars clips, idiots in cars driving fails, epic car fails, idiots in car, car crash compilation, epic car crashes, dash cam footage, totoal idiots on the road, car crash compilation, epic dash cam video, road rage, best of idiots in cars ' + epNum + '" --thumbnail="thumbnail.jpg" --default-language="en" --default-audio-language="en" --client-secrets="client_secrets.json" --credentials-file="my_credentials.json" output.mkv', shell=True)
+
+#Check clips for kids or YT gets mad
+def kidCheck():
+	kidCheck = input("Are the clips free of kids? (y/N): ")
+	if kidCheck == "y":
+		pass
+	else:
+		quit()
+
 def main():
 	#delete old output files
 	subprocess.run("rm output.mkv", shell=True)
 	subprocess.run("rm thumbnail.jpg", shell=True)
 
-	#Download clips from Reddit
 	downloadClips()
-
-	#Check clips for kids or YT gets mad
-	#kidCheck = input("Are the clips free of kids? (y/N): ")
-	#if kidCheck == "y":
-	#	pass
-	#else:
-	#	quit()
-
-	#Add silent audio track to videos
 	addSilentAudio()
-	#Adjust resoluton and sar to match
+	kidCheck()
 	fixRes()
-
-	#Combine all clips into one video
 	combineClips()
 
 	#Get episode number
 	now = datetime.now()
-	og_date = datetime.strptime('2021-03-20', "%Y-%m-%d")
+	og_date = datetime.strptime('2021-04-14', "%Y-%m-%d")
 	str_now = now.strftime("%Y-%m-%d")
 	epNum = str((now - og_date).days)
 
-	#Create screen shot
 	thumbnailGen(epNum)
-
-	#Upload video
-	#https://github.com/tokland/youtube-upload
-
-	subprocess.run('youtube-upload --title="Best Of Idiots In Cars ' + epNum + '" --description="The best videos of Idiots In Cars from ' + str_now + '. Like, comment, and subscribe! New video every day!\nWe take the best clips of idiots in cars, and combine them into the ultimate idiots in cars compilation! Witness epic car crashes, police cars in action, the best dash cam footage, and some of the top car driving fails on the internet." --category="Autos & Vehicles" --tags="idiots in cars, best of idiots in cars, idiots in cars highlights, dashcam fails, idiots in cars reddit, dash cam accidents, total idiots driving in russia, idiots in cars police, idiots in cars clips, idiots in cars driving fails, epic car fails, idiots in car, car crash compilation, epic car crashes, dash cam footage, totoal idiots on the road, car crash compilation, epic dash cam video, road rage, best of idiots in cars ' + epNum + '" --thumbnail="thumbnail.jpg" --default-language="en" --default-audio-language="en" --client-secrets="client_secrets.json" --credentials-file="my_credentials.json" output.mkv', shell=True)
+	uploadVideo(epNum, str_now)
 
 	#Delete un-needed files
 	subprocess.run("rm fixed/*.mp4", shell=True)
